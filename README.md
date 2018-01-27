@@ -14,5 +14,5 @@ Add these settings to your ProfitTrailer PAIRS.properties file:
 ## Usage
 Place ProfitTrailer-NBL.jar into your ProfitTrailer folder.
 
-Change directory to ProfitTrailer folder and run the jar file:
+Change directory to your ProfitTrailer folder and run the jar file:
 java -jar ProfitTrailer-NBL.jar
