@@ -1,4 +1,4 @@
-package com.github.bennettca.newbinancelistings;
+package com.github.bennettca.nbl;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.PropertiesConfigurationLayout;
@@ -97,8 +97,8 @@ public class NewBinanceListings implements Runnable {
             modifyProfitTrailerSettings();
         }
 
-        long elapsed = System.currentTimeMillis() - start;
         if (first) {
+            long elapsed = System.currentTimeMillis() - start;
             LOGGER.info(String.format("Loaded " + cache.size() + " newest listings (Took " + elapsed + " ms)", URL));
         }
     }
@@ -143,11 +143,9 @@ public class NewBinanceListings implements Runnable {
             String propsKey = entry.getKey() + market + "_trading_enabled";
             long age = Duration.between(now, entry.getValue()).abs().toDays();
             if (age <= days) {
-                if (!config.containsKey(propsKey)) {
-                    config.setProperty(propsKey, "false");
-                    modified = true;
-                    LOGGER.info("Disabled trading for " + entry.getKey() + " (Listed " + age + " days ago)");
-                }
+                config.setProperty(propsKey, "false");
+                modified = true;
+                LOGGER.info("Disabled trading for " + entry.getKey() + " (Listed " + age + " days ago)");
                 continue;
             }
             if (clear && config.containsKey(propsKey)) {
