@@ -39,6 +39,10 @@ public class NewBinanceListings implements Runnable {
     private final Map<String, LocalDateTime> cache;
     private ScheduledExecutorService scheduler;
 
+    private int days = 14;
+    private boolean enabled = true;
+    private boolean clear = true;
+
     public NewBinanceListings() {
         cache = new HashMap<>();
     }
@@ -46,48 +50,47 @@ public class NewBinanceListings implements Runnable {
     public void start() {
         LOGGER.info("Set to query " + URL + " every 15 minutes");
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this, 0, 40, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this, 0, 15, TimeUnit.MINUTES);
     }
 
     @Override
     public void run() {
         long start = System.currentTimeMillis();
         boolean first = cache.isEmpty();
-        LOGGER.info("Fetching data...");
-        try {
-            Document doc = Jsoup.connect(URL).get();
-            Elements newListings = doc.select(".article-list-link");
-            for (Element element : newListings) {
-                String title = element.text();
-                if (title.contains("Binance Lists")) {
-                    String coin = title.replace("Binance Lists ", "").trim();
+        if (enabled) {
+            LOGGER.info("Fetching data...");
+            try {
+                Document doc = Jsoup.connect(URL).get();
+                Elements newListings = doc.select(".article-list-link");
+                for (Element element : newListings) {
+                    String title = element.text();
+                    if (title.contains("Binance Lists")) {
+                        String coin = title.replace("Binance Lists ", "").trim();
+                        Matcher matcher = SYMBOL.matcher(coin);
+                        if (matcher.find()) {
+                            coin = matcher.group().replaceAll("(\\(|\\))", "");
+                        } else if (coin.length() > 5) {
+                            continue;
+                        }
+                        if (cache.containsKey(coin)) continue;
 
-                    if (coin.contains("IOS") && first) continue;
+                        // Not cached, so load the release date from the linked article.
+                        Document listingArticle = Jsoup.connect(element.absUrl("href")).get();
+                        Element dateElement = listingArticle.selectFirst(".meta-data time");
+                        LocalDateTime date = LocalDateTime.parse(dateElement.attr("datetime"),
+                                DateTimeFormatter.ISO_DATE_TIME);
 
-                    Matcher matcher = SYMBOL.matcher(coin);
-                    if (matcher.find()) {
-                        coin = matcher.group().replaceAll("(\\(|\\))", "");
-                    } else if (coin.length() > 5) {
-                        continue;
+                        if (!first && !cache.containsKey(coin)) {
+                            LOGGER.info("New Binance listing: " + coin + " (Released "
+                                    + date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + ")");
+                        }
+                        cache.put(coin, date);
                     }
-                    if (cache.containsKey(coin)) {
-                        continue;
-                    }
-
-                    Document listingArticle = Jsoup.connect(element.absUrl("href")).get();
-                    Element dateElement = listingArticle.selectFirst(".meta-data time");
-                    LocalDateTime date = LocalDateTime.parse(dateElement.attr("datetime"),
-                            DateTimeFormatter.ISO_DATE_TIME);
-
-                    if (!first && !cache.containsKey(coin)) {
-                        LOGGER.info("New Binance listing: " + coin + " (Released "
-                                + date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + ")");
-                    }
-                    cache.put(coin, date);
                 }
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to query " + URL, e);
             }
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to query " + URL, e);
+            LOGGER.info("Done");
         }
 
         if (!cache.isEmpty()) {
@@ -112,26 +115,54 @@ public class NewBinanceListings implements Runnable {
         }
         config.setLayout(layout);
 
+        // Check if the market setting exists.
         if (!config.containsKey("MARKET")) {
             LOGGER.warning("No market set in " + pairsFile.getName());
             return;
         }
         String market = (String) config.getProperty("MARKET");
 
+        // Update NBL settings.
+        if (config.containsKey("NBL_enabled")) {
+            enabled = config.getBoolean("NBL_enabled");
+        }
+        if (config.containsKey("NBL_days")) {
+            days = config.getInt("NBL_days");
+        }
+        if (config.containsKey("NBL_clear")) {
+            clear = config.getBoolean("NBL_clear");
+        }
+        if (!enabled) {
+            LOGGER.info("Currently disabled, set NBL_enabled = true in PAIRS.properties to re-enable");
+            return;
+        }
+
+        boolean modified = false;
         LocalDateTime now = LocalDateTime.now();
         for (Entry<String, LocalDateTime> entry : cache.entrySet()) {
-            if (Duration.between(now, entry.getValue()).abs().toDays() <= 14) {
-                String propsKey = entry.getKey() + market + "_trading_enabled";
+            String propsKey = entry.getKey() + market + "_trading_enabled";
+            long age = Duration.between(now, entry.getValue()).abs().toDays();
+            if (age <= days) {
                 if (!config.containsKey(propsKey)) {
                     config.setProperty(propsKey, "false");
+                    modified = true;
+                    LOGGER.info("Disabled trading for " + entry.getKey() + " (Listed " + age + " days ago)");
                 }
+                continue;
+            }
+            if (clear && config.containsKey(propsKey)) {
+                config.clearProperty(propsKey);
+                modified = true;
+                LOGGER.info("Enabled trading for " + entry.getKey() + " (Listed " + age + " days ago)");
             }
         }
 
-        try {
-            config.write(new FileWriter(pairsFile, false));
-        } catch (ConfigurationException | IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to save " + pairsFile.getName(), e);
+        if (modified) {
+            try {
+                config.write(new FileWriter(pairsFile, false));
+            } catch (ConfigurationException | IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to save " + pairsFile.getName(), e);
+            }
         }
     }
 }
