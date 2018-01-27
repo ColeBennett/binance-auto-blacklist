@@ -1,7 +1,12 @@
 # ProfitTrailer-NewBinanceListings
 
 Automatcally checks for new Binance listings and disables trading in ProfitTrailer.
-All newly listed coins less than 14 days old will be added to your PAIRS.properties file.
+All newly listed coins will be added to your PAIRS.properties file.
+
+# Configuration
+Add these settings to your PAIRS.properties file:
+NBL_days = 14 (automatically disable coins that have only been listed for less than 14 days)
+NBL_clear = true (if true, re-enable trading of a newly listed coin once it has been listed for at least NBL_days)
 
 # Usage
 Place ProfitTrailer-NBL.jar into your ProfitTrailer folder.
