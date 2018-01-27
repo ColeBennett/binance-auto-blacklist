@@ -1,1 +1,0 @@
-java -jar ProfitTrailer-NewBinanceListings.jar
