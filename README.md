@@ -13,9 +13,9 @@ Add these settings to your ProfitTrailer PAIRS.properties file:
 
 ## Usage
 1. Place ProfitTrailer-NBL.jar into your ProfitTrailer folder.
-2. Change directory to your ProfitTrailer folder (cd <path-to-ProfitTrailer-folder>).
+2. Change directory to your ProfitTrailer folder.
 3. Run the jar file: java -jar ProfitTrailer-NBL.jar
-4. Leave running to continually fetch new updates from Binance listing article.
+4. Leave running to continually fetch new updates from the Binance listing article.
 
-### Latest Compiled Jar
+## Latest Compiled Jar
 https://github.com/bennettca/ProfitTrailer-new-binance-listings/releases
