@@ -3,10 +3,6 @@
 Automatcally checks for new Binance listings and disables trading in ProfitTrailer.
 All newly listed coins will be disabled in your PAIRS.properties file.
 
-## To-Do
-* Interval configuration option for fetching updates
-* PT-feeder support
-
 ## Configuration
 Add these settings to your ProfitTrailer PAIRS.properties file:
 * NBL_enabled = true (enable/disable this tool while it's running)
@@ -23,3 +19,6 @@ Add these settings to your ProfitTrailer PAIRS.properties file:
 
 ## Latest Compiled Jar
 https://github.com/bennettca/ProfitTrailer-new-binance-listings/releases
+
+## If you found this tool useful
+LTC: LXMEqz4DYtWvx2dd8LiZ7S4oFyoocFCTQs
