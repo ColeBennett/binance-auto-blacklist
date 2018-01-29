@@ -10,6 +10,7 @@ Add these settings to your ProfitTrailer PAIRS.properties file:
 (automatically disable coins that have only been listed for less than 14 days)
 * NBL_clear = true
 (if true, re-enable trading of a newly listed coin once it has been listed for at least NBL_days)
+* NBL_interval = 30 (time in minutes between each check for new listings)
 
 ## Usage
 1. Place ProfitTrailer-NBL.jar into your ProfitTrailer folder.
@@ -21,4 +22,4 @@ Add these settings to your ProfitTrailer PAIRS.properties file:
 https://github.com/bennettca/ProfitTrailer-new-binance-listings/releases
 
 ## If you found this tool useful
-LTC: LXMEqz4DYtWvx2dd8LiZ7S4oFyoocFCTQs
+LTC: LQYXFHK1exVRP8FbFDh134hCddRXGmWZqn
