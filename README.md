@@ -17,3 +17,5 @@ Place ProfitTrailer-blacklist.jar into your ProfitTrailer folder.
 Change directory to your ProfitTrailer folder and run the jar file:
 java -jar ProfitTrailer-blacklist.jar
 
+##If you found this tool useful
+LTC: LQYXFHK1exVRP8FbFDh134hCddRXGmWZqn
