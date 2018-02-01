@@ -9,7 +9,7 @@ Modify these settings in the blacklist.properties file:
 * enabled = true (enable/disable this tool while it's running)
 * days = 14 (automatically disable coins that have only been listed for less than 14 days)
 * clear = true (if true, re-enable trading of a newly listed coin once it has been listed for at least the days defined above)
-* interval = 60 (interval in minutes to check for new Binance listings)
+* interval = 30 (interval in minutes to check for new Binance listings)
 
 ## Usage
 Place ProfitTrailer-blacklist.jar into your ProfitTrailer folder.
