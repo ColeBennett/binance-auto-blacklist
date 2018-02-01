@@ -43,7 +43,7 @@ public class BinanceAutoBlacklist implements Runnable {
     private ScheduledFuture<?> task;
     private int currentInterval;
 
-    /* NBL settings for PAIRS.properties */
+    /* Settings for blacklist.properties */
     private int interval;
     private int days;
     private boolean enabled, clear;
@@ -134,7 +134,7 @@ public class BinanceAutoBlacklist implements Runnable {
             task.cancel(true);
         }
         LOGGER.info("Set to query " + URL + " every " + currentInterval + " minutes");
-        task = scheduler.scheduleAtFixedRate(this, 0, currentInterval, TimeUnit.SECONDS);
+        task = scheduler.scheduleAtFixedRate(this, 0, currentInterval, TimeUnit.MINUTES);
     }
 
     PropertiesConfiguration updateSettings() {
@@ -213,7 +213,8 @@ public class BinanceAutoBlacklist implements Runnable {
                         ent.getValue().setProperty(propsKey, "false");
                         modified.add(ent.getKey());
                         if (checkPair(ent.getValue(), propsKey)) {
-                            LOGGER.info("Disabled trading for " + entry.getKey() + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
+                            LOGGER.info("Disabled trading for " + entry.getKey()
+                                    + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
                         }
                     }
                 }
@@ -225,7 +226,8 @@ public class BinanceAutoBlacklist implements Runnable {
                         ent.getValue().clearProperty(propsKey);
                         modified.add(ent.getKey());
                         if (checkPair(config, propsKey)) {
-                            LOGGER.info("Enabled trading for " + entry.getKey() + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
+                            LOGGER.info("Enabled trading for " + entry.getKey()
+                                    + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
                         }
                     }
                 }
