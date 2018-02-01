@@ -209,26 +209,24 @@ public class BinanceAutoBlacklist implements Runnable {
             long age = Duration.between(now, entry.getValue()).abs().toDays();
             if (age <= days) {
                 for (Entry<File, PropertiesConfiguration> ent : files.entrySet()) {
-                    if (ent.getValue().containsKey(propsKey)) {
-                        ent.getValue().setProperty(propsKey, "false");
-                        modified.add(ent.getKey());
-                        if (checkPair(ent.getValue(), propsKey)) {
-                            LOGGER.info("Disabled trading for " + entry.getKey()
-                                    + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
-                        }
+                    if (checkPair(ent.getValue(), propsKey)) {
+                        LOGGER.info("Disabled trading for " + entry.getKey()
+                                + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
                     }
+                    ent.getValue().setProperty(propsKey, "false");
+                    modified.add(ent.getKey());
                 }
                 continue;
             }
             for (Entry<File, PropertiesConfiguration> ent : files.entrySet()) {
                 if (clear && ent.getValue().containsKey(propsKey)) {
                     if (ent.getValue().containsKey(propsKey)) {
-                        ent.getValue().clearProperty(propsKey);
-                        modified.add(ent.getKey());
                         if (checkPair(config, propsKey)) {
                             LOGGER.info("Enabled trading for " + entry.getKey()
                                     + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
                         }
+                        ent.getValue().clearProperty(propsKey);
+                        modified.add(ent.getKey());
                     }
                 }
             }
