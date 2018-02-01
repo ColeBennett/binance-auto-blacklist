@@ -13,9 +13,9 @@ Modify these settings in the blacklist.properties file:
 * interval = 30 (interval in minutes to check for new Binance listings)
 
 ## Usage
-Place ProfitTrailer-blacklist.jar into your ProfitTrailer folder.
+Place ProfitTrailer-blacklist.jar into your ProfitTrailer or ProfitFeeder folder.
 
-Change directory to your ProfitTrailer/Feeder folder and run the jar file:
+Change directory to your ProfitTrailer or ProfitFeeder folder and run the jar file:
 java -jar ProfitTrailer-blacklist.jar
 
 ## If you found this tool useful
