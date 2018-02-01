@@ -45,6 +45,7 @@ public class BinanceAutoBlacklist implements Runnable {
 
     /* Settings for blacklist.properties */
     private int interval;
+    private String market;
     private int days;
     private boolean enabled, clear;
 
@@ -58,6 +59,7 @@ public class BinanceAutoBlacklist implements Runnable {
         if (!settingsFile.exists()) {
             config.setProperty("enabled", enabled = true);
             config.setProperty("interval", interval = 30);
+            config.setProperty("market", market = "BTC");
             config.setProperty("days", days = 14);
             config.setProperty("clear", clear = true);
             try (FileWriter fw = new FileWriter(settingsFile, false)) {
@@ -143,6 +145,9 @@ public class BinanceAutoBlacklist implements Runnable {
         if (config.containsKey("enabled")) {
             enabled = config.getBoolean("enabled");
         }
+        if (config.containsKey("market")) {
+            market = config.getString("market");
+        }
         if (config.containsKey("days")) {
             days = config.getInt("days");
         }
@@ -163,6 +168,7 @@ public class BinanceAutoBlacklist implements Runnable {
         }
         LOGGER.info(" enabled  = " + enabled);
         LOGGER.info(" interval = " + currentInterval + " minutes");
+        LOGGER.info(" market   = " + market);
         LOGGER.info(" days     = " + days);
         LOGGER.info(" clear    = " + clear);
         if (start) start();
@@ -176,17 +182,13 @@ public class BinanceAutoBlacklist implements Runnable {
         }
         if (cache.isEmpty()) return;
 
-        PropertiesConfiguration pairsConfig = loadPropertiesFile(pairsFile);
-        // Check if the market setting exists.
-        if (!pairsConfig.containsKey("MARKET")) {
-            LOGGER.warning("No market set in " + pairsFile.getName());
-            return;
-        }
 
         // Load ProfitTrailer/ProfitFeeder pair files.
         Map<File, PropertiesConfiguration> files = new HashMap<>();
         Set<File> modified = new HashSet<>();
-        files.put(pairsFile, pairsConfig);
+        if (pairsFile.exists()) {
+            files.put(pairsFile, loadPropertiesFile(pairsFile));
+        }
 
         File feederBaseDir = new File("config");
         if (feederBaseDir.isDirectory()) {
@@ -202,7 +204,6 @@ public class BinanceAutoBlacklist implements Runnable {
             }
         }
 
-        String market = (String) pairsConfig.getProperty("MARKET");
         LocalDateTime now = LocalDateTime.now();
         for (Entry<String, LocalDateTime> entry : cache.entrySet()) {
             String propsKey = entry.getKey() + market + "_trading_enabled";
