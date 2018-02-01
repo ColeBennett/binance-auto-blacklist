@@ -2,7 +2,7 @@
 
 Automatcally checks for new Binance listings and disables trading in ProfitTrailer.
 All newly listed coins will be disabled in your PAIRS.properties file. If you are
-also using ProfitFeeder, each of your pairs.txt files will be updated as well.
+using ProfitFeeder, each of your pairs.txt files will be updated.
 
 ## Configuration
 Modify these settings in the blacklist.properties file:
