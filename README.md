@@ -1,25 +1,18 @@
-# ProfitTrailer-NewBinanceListings
+# ProfitTrailer - Binance Auto Blacklist
 
 Automatcally checks for new Binance listings and disables trading in ProfitTrailer.
-All newly listed coins will be disabled in your PAIRS.properties file.
+All newly listed coins will be disabled in your PAIRS.properties file. If you are
+also using ProfitFeeder, each of your pairs.txt files will be updated as well.
 
 ## Configuration
-Add these settings to your ProfitTrailer PAIRS.properties file:
-* NBL_enabled = true (enable/disable this tool while it's running)
-* NBL_days = 14
-(automatically disable coins that have only been listed for less than 14 days)
-* NBL_clear = true
-(if true, re-enable trading of a newly listed coin once it has been listed for at least NBL_days)
-* NBL_interval = 30 (time in minutes between each check for new listings)
+Modify these settings in the blacklist.properties file:
+* enabled = true (enable/disable this tool while it's running)
+* days = 14 (automatically disable coins that have only been listed for less than 14 days)
+* clear = true (if true, re-enable trading of a newly listed coin once it has been listed for at least the days defined above)
+* interval = 60 (interval in minutes to check for new Binance listings)
 
 ## Usage
-1. Place ProfitTrailer-NBL.jar into your ProfitTrailer folder.
-2. Change directory to your ProfitTrailer folder.
-3. Run the jar file: java -jar ProfitTrailer-NBL.jar
-4. Leave running to continually fetch new updates from the Binance listing article.
+Place ProfitTrailer-blacklist.jar into your ProfitTrailer folder.
 
-## Latest Compiled Jar
-https://github.com/bennettca/ProfitTrailer-new-binance-listings/releases
-
-## If you found this tool useful
-LTC: LQYXFHK1exVRP8FbFDh134hCddRXGmWZqn
+Change directory to your ProfitTrailer folder and run the jar file:
+java -jar ProfitTrailer-blacklist.jar
