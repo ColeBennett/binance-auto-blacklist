@@ -221,7 +221,7 @@ public class BinanceAutoBlacklist implements Runnable {
                                 + " (Listed " + age + " days ago) in " + ent.getKey().getPath()
                                 + (som ? " (sell-only mode)" : ""));
                     }
-                    ent.getValue().setProperty(propsKey, "false");
+                    ent.getValue().setProperty(propsKey, som ? "true" : "false");
                     modified.add(ent.getKey());
                 }
                 continue;
