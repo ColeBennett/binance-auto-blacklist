@@ -17,6 +17,7 @@ Place ProfitTrailer-blacklist.jar into your ProfitTrailer or ProfitFeeder folder
 
 Change directory to your ProfitTrailer or ProfitFeeder folder and run the jar file:
 java -jar ProfitTrailer-blacklist.jar
+The blacklist.properties file will be generated if it does not exist.
 
 ## Download the compiled jar
 https://github.com/bennettca/binance-auto-blacklist/releases
