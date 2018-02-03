@@ -47,7 +47,7 @@ public class BinanceAutoBlacklist implements Runnable {
     private int interval;
     private String market;
     private int days;
-    private boolean enabled, clear;
+    private boolean enabled, clear, som;
 
     public BinanceAutoBlacklist() {
         cache = new HashMap<>();
@@ -62,6 +62,7 @@ public class BinanceAutoBlacklist implements Runnable {
             config.setProperty("market", market = "BTC");
             config.setProperty("days", days = 14);
             config.setProperty("clear", clear = true);
+            config.setProperty("som", som = false);
             try (FileWriter fw = new FileWriter(settingsFile, false)) {
                 config.write(fw);
             } catch (ConfigurationException | IOException e) {
@@ -154,6 +155,9 @@ public class BinanceAutoBlacklist implements Runnable {
         if (config.containsKey("clear")) {
             clear = config.getBoolean("clear");
         }
+        if (config.containsKey("som")) {
+            som = config.getBoolean("som");
+        }
         boolean start = false;
         if (config.containsKey("interval")) {
             interval = config.getInt("interval");
@@ -167,10 +171,12 @@ public class BinanceAutoBlacklist implements Runnable {
             start = true;
         }
         LOGGER.info(" enabled  = " + enabled);
-        LOGGER.info(" interval = " + currentInterval + " minutes");
+        LOGGER.info(" interval = " + currentInterval + " minute"
+                + (currentInterval != 1 ? "s" : ""));
         LOGGER.info(" market   = " + market);
         LOGGER.info(" days     = " + days);
         LOGGER.info(" clear    = " + clear);
+        LOGGER.info(" som      = " + som);
         if (start) start();
         return config;
     }
@@ -206,13 +212,14 @@ public class BinanceAutoBlacklist implements Runnable {
 
         LocalDateTime now = LocalDateTime.now();
         for (Entry<String, LocalDateTime> entry : cache.entrySet()) {
-            String propsKey = entry.getKey() + market + "_trading_enabled";
+            String propsKey = entry.getKey() + market + (som ? "_sell_only_mode" : "_trading_enabled");
             long age = Duration.between(now, entry.getValue()).abs().toDays();
             if (age <= days) {
                 for (Entry<File, PropertiesConfiguration> ent : files.entrySet()) {
                     if (checkPair(ent.getValue(), propsKey)) {
                         LOGGER.info("Disabled trading for " + entry.getKey()
-                                + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
+                                + " (Listed " + age + " days ago) in " + ent.getKey().getPath()
+                                + (som ? " (sell-only mode)" : ""));
                     }
                     ent.getValue().setProperty(propsKey, "false");
                     modified.add(ent.getKey());
@@ -221,14 +228,12 @@ public class BinanceAutoBlacklist implements Runnable {
             }
             for (Entry<File, PropertiesConfiguration> ent : files.entrySet()) {
                 if (clear && ent.getValue().containsKey(propsKey)) {
-                    if (ent.getValue().containsKey(propsKey)) {
-                        if (checkPair(config, propsKey)) {
-                            LOGGER.info("Enabled trading for " + entry.getKey()
-                                    + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
-                        }
-                        ent.getValue().clearProperty(propsKey);
-                        modified.add(ent.getKey());
+                    if (checkPair(config, propsKey)) {
+                        LOGGER.info("Enabled trading for " + entry.getKey()
+                                + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
                     }
+                    ent.getValue().clearProperty(propsKey);
+                    modified.add(ent.getKey());
                 }
             }
         }

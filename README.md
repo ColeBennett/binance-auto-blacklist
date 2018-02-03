@@ -10,14 +10,14 @@ Modify these settings in the blacklist.properties file:
 * market = BTC (the market your bot is currently in)
 * days = 14 (automatically disable coins that have only been listed for less than 14 days)
 * clear = true (if true, re-enable trading of a newly listed coin once it has been listed for at least the days defined above)
+* som = false (if true, set a pair to sell-only mode instead of disabling trading)
 * interval = 30 (interval in minutes to check for new Binance listings)
 
 ## Usage
-Place ProfitTrailer-blacklist.jar into your ProfitTrailer or ProfitFeeder folder.
-
-Change directory to your ProfitTrailer or ProfitFeeder folder and run the jar file:
-java -jar ProfitTrailer-blacklist.jar
-The blacklist.properties file will be generated if it does not exist.
+* Place ProfitTrailer-blacklist.jar into your ProfitTrailer or ProfitFeeder folder.
+* Change directory to your ProfitTrailer or ProfitFeeder folder and run the jar file:
+* java -jar ProfitTrailer-blacklist.jar
+* The blacklist.properties file will be generated if it does not exist.
 
 ## Download the compiled jar
 https://github.com/bennettca/binance-auto-blacklist/releases
