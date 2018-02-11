@@ -7,10 +7,10 @@ using PT-Feeder, your SomOnlyPairs in appsettings.json will be updated.
 ## Configuration
 Modify these settings in the blacklist.properties file:
 * enabled = true (enable/disable this tool while it's running)
+* interval = 5 (interval in minutes to check for new Binance listings)
 * market = BTC (the market your bot is currently in)
 * days = 14 (automatically disable coins that have only been listed for less than 14 days)
-* clear = true (if true, disable sell-only mode for a newly listed coin once it has been listed for at least the days defined above)
-* interval = 30 (interval in minutes to check for new Binance listings)
+* clear = false (if true, disable sell-only mode for a newly listed coin once it has been listed for at least the days defined above)
 
 ## Usage for PT
 * Download the latest zip file from https://github.com/bennettca/binance-auto-blacklist/releases
