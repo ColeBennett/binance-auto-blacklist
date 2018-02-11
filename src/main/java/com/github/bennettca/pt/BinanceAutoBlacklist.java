@@ -1,14 +1,19 @@
 package com.github.bennettca.pt;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.PropertiesConfigurationLayout;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,9 +39,13 @@ public class BinanceAutoBlacklist implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(BinanceAutoBlacklist.class.getName());
     private static final String URL = "https://support.binance.com/hc/en-us/sections/115000106672-New-Listings";
     private static final Pattern SYMBOL = Pattern.compile("\\((.*?)\\)");
+    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping()
+            .setLenient().setPrettyPrinting().create();
+    private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>(){}.getType();
 
     private final File settingsFile = new File("blacklist.properties");
     private final File pairsFile = new File("trading", "PAIRS.properties");
+    private final File feederFile = new File("config", "appsettings.json");
     private final PropertiesConfiguration config;
     private final Map<String, LocalDateTime> cache;
     private final ScheduledExecutorService scheduler;
@@ -47,7 +56,7 @@ public class BinanceAutoBlacklist implements Runnable {
     private int interval;
     private String market;
     private int days;
-    private boolean enabled, clear, som;
+    private boolean enabled, clear;
 
     public BinanceAutoBlacklist() {
         cache = new HashMap<>();
@@ -62,7 +71,6 @@ public class BinanceAutoBlacklist implements Runnable {
             config.setProperty("market", market = "BTC");
             config.setProperty("days", days = 14);
             config.setProperty("clear", clear = true);
-            config.setProperty("som", som = false);
             try (FileWriter fw = new FileWriter(settingsFile, false)) {
                 config.write(fw);
             } catch (ConfigurationException | IOException e) {
@@ -74,7 +82,6 @@ public class BinanceAutoBlacklist implements Runnable {
         } else {
             updateSettings();
         }
-        new FileWatcher(this, settingsFile);
     }
 
     @Override
@@ -126,6 +133,20 @@ public class BinanceAutoBlacklist implements Runnable {
         if (newListingsFound > 0) {
             long elapsed = System.currentTimeMillis() - start;
             LOGGER.info(String.format("Loaded " + newListingsFound + " newest listings (Took " + elapsed + " ms)", URL));
+            LOGGER.info("Most recent:");
+
+            LocalDateTime now = LocalDateTime.now();
+            Iterator<Entry<String, LocalDateTime>> itr = cache.entrySet().iterator();
+
+            List<String> sorted = new ArrayList<String>(cache.keySet());
+            Iterator<String> li = sorted.iterator();
+
+            for (int i = 0; i < 5; i++) {
+                    Entry<String, LocalDateTime> entry = itr.next();
+                    long age = Duration.between(now, entry.getValue()).abs().toDays();
+                    LOGGER.info("  " + entry.getKey() + " (listed " + age + " days ago)");
+
+            }
         }
         if (!cache.isEmpty()) {
             modifyProfitTrailerSettings();
@@ -155,9 +176,6 @@ public class BinanceAutoBlacklist implements Runnable {
         if (config.containsKey("clear")) {
             clear = config.getBoolean("clear");
         }
-        if (config.containsKey("som")) {
-            som = config.getBoolean("som");
-        }
         boolean start = false;
         if (config.containsKey("interval")) {
             interval = config.getInt("interval");
@@ -170,81 +188,114 @@ public class BinanceAutoBlacklist implements Runnable {
             currentInterval = interval;
             start = true;
         }
-        LOGGER.info(" enabled  = " + enabled);
-        LOGGER.info(" interval = " + currentInterval + " minute"
+        LOGGER.info("  enabled  = " + enabled);
+        LOGGER.info("  interval = " + currentInterval + " minute"
                 + (currentInterval != 1 ? "s" : ""));
-        LOGGER.info(" market   = " + market);
-        LOGGER.info(" days     = " + days);
-        LOGGER.info(" clear    = " + clear);
-        LOGGER.info(" som      = " + som);
+        LOGGER.info("  market   = " + market);
+        LOGGER.info("  days     = " + days);
+        LOGGER.info("  clear    = " + clear);
         if (start) start();
         return config;
     }
 
+    @SuppressWarnings("unchecked")
     private void modifyProfitTrailerSettings() {
         if (!enabled) {
             LOGGER.info("Currently disabled, set 'enabled = true' in blacklist.properties to re-enable");
             return;
         }
         if (cache.isEmpty()) return;
+        boolean modifiedPairs = false, modifiedFeeder = false;
 
-
-        // Load ProfitTrailer/ProfitFeeder pair files.
-        Map<File, PropertiesConfiguration> files = new HashMap<>();
-        Set<File> modified = new HashSet<>();
+        // Load PT PAIRS.properties
+        PropertiesConfiguration props = null;
         if (pairsFile.exists()) {
-            files.put(pairsFile, loadPropertiesFile(pairsFile));
+            props = loadPropertiesFile(pairsFile);
         }
 
-        File feederBaseDir = new File("config");
-        if (feederBaseDir.isDirectory()) {
-            File[] dirs = feederBaseDir.listFiles();
-            if (dirs != null) {
-                for (File dir : dirs) {
-                    if (!dir.isDirectory()) continue;
-                    File feederFile = new File(dir, "pairs.txt");
-                    if (feederFile.exists()) {
-                        files.put(feederFile, loadPropertiesFile(feederFile));
+        // Load PT-Feeder appsettings.json
+        Map<String, Object> appsettings = null;
+        Map<String, String> general = null;
+        List<String> somPairs = null;
+        if (feederFile.exists()) {
+            try (BufferedReader br = new BufferedReader(new FileReader(feederFile))) {
+                appsettings = GSON.fromJson(br, MAP_TYPE);
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to load " + feederFile.getPath());
+            }
+            if (appsettings != null) {
+                general = (Map<String, String>) appsettings.get("General");
+                if (general != null) {
+                    String somData = general.get("SomOnlyPairs");
+                    if (somData != null) {
+                        somPairs = Arrays.asList(StringUtils.split(general.get("SomOnlyPairs"), ','));
+                    } else {
+                        LOGGER.warning("SomOnlyPairs not found in " + feederFile.getPath());
                     }
+                } else {
+                    LOGGER.warning("Could not find General settings in " + feederFile.getPath());
                 }
             }
         }
 
         LocalDateTime now = LocalDateTime.now();
         for (Entry<String, LocalDateTime> entry : cache.entrySet()) {
-            String propsKey = entry.getKey() + market + (som ? "_sell_only_mode" : "_trading_enabled");
+            String propsKey = entry.getKey() + market + "_sell_only_mode";
             long age = Duration.between(now, entry.getValue()).abs().toDays();
             if (age <= days) {
-                for (Entry<File, PropertiesConfiguration> ent : files.entrySet()) {
-                    if (checkPair(ent.getValue(), propsKey)) {
-                        LOGGER.info("Disabled trading for " + entry.getKey()
-                                + " (Listed " + age + " days ago) in " + ent.getKey().getPath()
-                                + (som ? " (sell-only mode)" : ""));
+                if (props != null) {
+                    if (checkPair(props, propsKey)) {
+                        LOGGER.info("Enabled sell-only mode for " + entry.getKey()
+                                + " (Listed " + age + " days ago) in " + pairsFile.getPath());
                     }
-                    ent.getValue().setProperty(propsKey, som ? "true" : "false");
-                    modified.add(ent.getKey());
+                    props.setProperty(propsKey, "true");
+                    modifiedPairs = true;
+                }
+                if (somPairs != null && !somPairs.contains(entry.getKey())) {
+                    somPairs.add(entry.getKey());
+                    modifiedFeeder = true;
+                    LOGGER.info("Enabled sell-only mode for " + entry.getKey()
+                            + " (Listed " + age + " days ago) in " + feederFile.getPath());
                 }
                 continue;
             }
-            for (Entry<File, PropertiesConfiguration> ent : files.entrySet()) {
-                if (clear && ent.getValue().containsKey(propsKey)) {
+            if (clear) {
+                if (props != null && props.containsKey(propsKey)) {
                     if (checkPair(config, propsKey)) {
-                        LOGGER.info("Enabled trading for " + entry.getKey()
-                                + " (Listed " + age + " days ago) in " + ent.getKey().getPath());
+                        LOGGER.info("Disabled sell-only mode for " + entry.getKey()
+                                + " (Listed " + age + " days ago) in " + pairsFile.getPath());
                     }
-                    ent.getValue().clearProperty(propsKey);
-                    modified.add(ent.getKey());
+                    props.clearProperty(propsKey);
+                    modifiedPairs = true;
+                }
+                if (somPairs != null) {
+                    somPairs.remove(entry.getKey());
+                    modifiedFeeder = true;
+                    LOGGER.info("Disabled sell-only mode for " + entry.getKey()
+                            + " (Listed " + age + " days ago) in " + feederFile.getPath());
                 }
             }
         }
 
-        for (Entry<File, PropertiesConfiguration> entry : files.entrySet()) {
-            if (!modified.contains(entry.getKey())) continue;
-            try (FileWriter fw = new FileWriter(entry.getKey(), false)) {
-                entry.getValue().write(fw);
+        LOGGER.info("done ");
+        if (modifiedPairs) {
+            LOGGER.info("saving pairs");
+            try (FileWriter fw = new FileWriter(pairsFile, false)) {
+                props.write(fw);
             } catch (ConfigurationException | IOException e) {
-                LOGGER.log(Level.WARNING, "Failed to save " + entry.getKey().getName(), e);
+                LOGGER.log(Level.WARNING, "Failed to save " + pairsFile.getPath(), e);
             }
+            LOGGER.info("Saved pairs");
+        }
+
+        LOGGER.info("som: " + somPairs);
+        if (modifiedFeeder && somPairs != null) {
+            general.put("SomOnlyPairs", StringUtils.join(somPairs, ','));
+//            try (BufferedWriter bw = new BufferedWriter(new FileWriter(feederFile, false))) {
+//                GSON.toJson(appsettings, bw);
+//            } catch (IOException e) {
+//                LOGGER.log(Level.WARNING, "Failed to save " + feederFile.getPath(), e);
+//            }
         }
     }
 
@@ -261,7 +312,7 @@ public class BinanceAutoBlacklist implements Runnable {
         try (InputStreamReader is = new InputStreamReader(new FileInputStream(file))) {
             layout.load(config, is);
         } catch (ConfigurationException | FileNotFoundException e) {
-            LOGGER.log(Level.WARNING, "Failed to load " + file.getName(), e);
+            LOGGER.log(Level.WARNING, "Failed to load " + file.getPath(), e);
         } catch (IOException e) {
             e.printStackTrace();
         }
