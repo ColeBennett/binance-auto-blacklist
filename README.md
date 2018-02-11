@@ -2,10 +2,10 @@
 
 Automatcally checks for new Binance listings and disables trading in ProfitTrailer.
 All newly listed coins will be disabled in your PAIRS.properties file. If you are
-using ProfitFeeder, each of your pairs.txt files will be updated.
+using ProfitTrailer Feeder, your appsettings.json file will be updated.
 
-## Configuration
-Modify these settings in the blacklist.properties file:
+# Configuration
+Some settings in the blacklist.properties file:
 * enabled = true (enable/disable this tool while it's running)
 * market = BTC (the market your bot is currently in)
 * days = 14 (automatically disable coins that have only been listed for less than 14 days)
@@ -13,14 +13,19 @@ Modify these settings in the blacklist.properties file:
 * som = false (if true, set a pair to sell-only mode instead of disabling trading)
 * interval = 30 (interval in minutes to check for new Binance listings)
 
-## Usage
-* Place ProfitTrailer-blacklist.jar into your ProfitTrailer or ProfitFeeder folder.
-* Change directory to your ProfitTrailer or ProfitFeeder folder and run the jar file:
-* java -jar ProfitTrailer-blacklist.jar
-* The blacklist.properties file will be generated if it does not exist.
+# Usage for PT
+* Download the latest zip file from https://github.com/bennettca/binance-auto-blacklist/releases 
+* Extract the three files and place them in your ProfitTrailer folder
+* Modify the settings if you wish
+* If you are on Windows run the ProfitTrailer-blacklist.bat file and keep it open. If you are not on Windows please run the jar file as you normally would run a jar file in your OS. 
 
-## Download the compiled jar
-https://github.com/bennettca/binance-auto-blacklist/releases
+# Usage for PTF
+* Download the latest zip file from https://github.com/bennettca/binance-auto-blacklist/releases 
+* Extract the three files and place them in your ProfitTrailer Feeder folder
+* Modify the settings if you wish
+* If you are on Windows run the ProfitTrailer-blacklist.bat file and keep it open. If you are not on Windows please run the jar file as you normally would run a jar file in your OS. 
 
-## If you found this tool useful
+# If you need any help please PM @Cole#4126 on Discord
+
+# If you found the utility useful
 LTC: LQYXFHK1exVRP8FbFDh134hCddRXGmWZqn
