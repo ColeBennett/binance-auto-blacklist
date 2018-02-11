@@ -20,6 +20,7 @@ Some settings in the blacklist.properties file:
 * If you are on Windows run the ProfitTrailer-blacklist.bat file and keep it open. If you are not on Windows please run the jar file as you normally would run a jar file in your OS. 
 
 # Usage for PTF
+* MUST HAVE PTF V1.3.5.320 & UP! If you do not know what version please use the latest from here https://github.com/mehtadone/PTFeeder/releases
 * Download the latest zip file from https://github.com/bennettca/binance-auto-blacklist/releases 
 * Extract the three files and place them in your ProfitTrailer Feeder folder
 * Modify the settings if you wish
