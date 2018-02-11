@@ -1,6 +1,6 @@
 # ProfitTrailer - Binance Auto Blacklist
 
-Automatcally checks for new Binance listings and enables sell-only mode for trading in ProfitTrailer.
+Automatcally checks for new Binance listings and enables sell-only mode for pairs in ProfitTrailer.
 All newly listed coins will be set to sell-only mode in your PAIRS.properties file. If you are
 using PT-Feeder, your SomOnlyPairs in appsettings.json will be updated.
 
@@ -9,7 +9,7 @@ Modify these settings in the blacklist.properties file:
 * enabled = true (enable/disable this tool while it's running)
 * market = BTC (the market your bot is currently in)
 * days = 14 (automatically disable coins that have only been listed for less than 14 days)
-* clear = true (if true, re-enable trading of a newly listed coin once it has been listed for at least the days defined above)
+* clear = true (if true, disable sell-only mode for a newly listed coin once it has been listed for at least the days defined above)
 * interval = 30 (interval in minutes to check for new Binance listings)
 
 ## Usage for PT
