@@ -24,8 +24,8 @@ Modify these settings in the blacklist.properties file:
 * Modify the settings if you wish (restart to update the settings)
 * If you are on Windows run the ProfitTrailer-blacklist.bat file and keep it open. If you are not on Windows please run the jar file as you normally would run a jar file in your OS.
 
-## Download the latest release
+### Download the latest release
 https://github.com/bennettca/binance-auto-blacklist/releases
 
-## If you found this tool useful
+### If you found this tool useful
 LTC: LQYXFHK1exVRP8FbFDh134hCddRXGmWZqn
